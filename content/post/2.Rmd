@@ -1,26 +1,23 @@
 ---
 authors:
 - Rory Yu
-date: "2021-09-20"
-excerpt: Biden's Approval Margins
-hero: /images/pic03.jpg
-title: Biden's Approval Margins
+date: "`r Sys.Date()`"
+excerpt: 
+hero: 
+title: 2
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   message = FALSE, 
   warning = FALSE, 
-  tidy=FALSE,     # display code as typed
-  size="small")   # slightly smaller font for code
-options(digits = 3)
-
-# default figure size
+  tidy=FALSE,
+  size="small")
+  options(digits = 3)
 knitr::opts_chunk$set(
   fig.width=6.75, 
   fig.height=6.75,
-  fig.align = "center"
-)
+  fig.align = "center")
 ```
 
 ```{r load-libraries, include=FALSE}
