@@ -1,7 +1,7 @@
 theme: "hugo-theme-novela"
-baseURL: "roryyu.netlify.app"
+baseURL: "https://example.com"
 languageCode: "en-us"
-title: "Rory Yu"
+title: "Hugo Novela"
 pygmentsstyle: 'monokai'
 paginate: 6
 social:
