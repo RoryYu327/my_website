@@ -1,15 +1,16 @@
 theme: "hugo-theme-novela"
-baseURL: "https://example.com"
+baseURL: "https://roryyu.netlify.app"
 languageCode: "en-us"
-title: "Hugo Novela"
+title: "Rory Yu"
 pygmentsstyle: 'monokai'
 paginate: 6
 social:
   twitter: "#"
-  github: "#"
-  instagram: "#"
-  linkedin: "#"
+  github: "https://github.com/RoryYu327"
+  instagram: "https://www.instagram.com/roryyyyyu/"
+  linkedin: "https://www.linkedin.com/in/roryyu/"
   dribbble: "#"
   youtube: "#"
+  facebook: "https://www.facebook.com/profile.php?id=100006030704488"
 taxonomies:
   author: authors
