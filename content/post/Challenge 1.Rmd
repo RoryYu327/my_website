@@ -1,16 +1,11 @@
 ---
 title: "Biden's Approval Margins"
-author: "Jiangxia Yu"
+author: "Rory Yu"
 date: "`r Sys.Date()`"
-output:
-  html_document:
-    theme: flatly
-    highlight: zenburn
-    number_sections: yes
-    toc: yes
-    toc_float: yes
-    code_folding: show
+categories: ["R"]
+tags: ["R Markdown", "plot"]
 ---
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
