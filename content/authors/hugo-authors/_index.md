@@ -12,5 +12,5 @@ social:
   url: "https://www.linkedin.com/in/roryyu/"
 - title: facebook
   url: "https://www.facebook.com/profile.php?id=100006030704488"
-title: Jiangxia Rory Yu
+title: Rory Yu
 ---
