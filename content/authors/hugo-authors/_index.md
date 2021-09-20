@@ -1,7 +1,7 @@
 ---
 avatar: /images/pic01.jpg
 bio: |
-  Currently Reading for Masters in Analytics and Management at London Business School.
+  Current student in Masters in Analytics and Management Programme at London Business School.
 featured: true
 social:
 - title: github
