@@ -1,46 +1,142 @@
 ---
 authors:
-- Hugo Authors
-date: "2019-03-05"
-excerpt: Guide to emoji usage in Hugo
-hero: /images/hero-3.jpg
-title: Emoji Support
+- Rory Yu
+date: "2021-09-20"
+excerpt: Biden's Approval Margins
+hero: /images/pic03.jpg
+title: Biden's Approval Margins
 ---
 
-Emoji can be enabled in a Hugo project in a number of ways.
-<!--more-->
-The [`emojify`](https://gohugo.io/functions/emojify/) function can be called directly in templates or [Inline Shortcodes](https://gohugo.io/templates/shortcode-templates/#inline-shortcodes).
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  message = FALSE, 
+  warning = FALSE, 
+  tidy=FALSE,     # display code as typed
+  size="small")   # slightly smaller font for code
+options(digits = 3)
 
-To enable emoji globally, set `enableEmoji` to `true` in your site’s [configuration](https://gohugo.io/getting-started/configuration/) and then you can type emoji shorthand codes directly in content files; e.g.
-
-
-<p><span class="nowrap"><span class="emojify">🙈</span> <code>:see_no_evil:</code></span>  <span class="nowrap"><span class="emojify">🙉</span> <code>:hear_no_evil:</code></span>  <span class="nowrap"><span class="emojify">🙊</span> <code>:speak_no_evil:</code></span></p>
-<br>
-
-The [Emoji cheat sheet](http://www.emoji-cheat-sheet.com/) is a useful reference for emoji shorthand codes.
-
-***
-
-**N.B.** The above steps enable Unicode Standard emoji characters and sequences in Hugo, however the rendering of these glyphs depends on the browser and the platform. To style the emoji you can either use a third party emoji font or a font stack; e.g.
-
-```css
-.emoji {
-font-family: Apple Color Emoji,Segoe UI Emoji,NotoColorEmoji,Segoe UI Symbol,Android Emoji,EmojiSymbols;
-}
+# default figure size
+knitr::opts_chunk$set(
+  fig.width=6.75, 
+  fig.height=6.75,
+  fig.align = "center"
+)
 ```
 
-{{< css.inline >}}
-<style>
-.emojify {
-	font-family: Apple Color Emoji,Segoe UI Emoji,NotoColorEmoji,Segoe UI Symbol,Android Emoji,EmojiSymbols;
-	font-size: 2rem;
-	vertical-align: middle;
-}
-@media screen and (max-width:650px) {
-    .nowrap {
-	display: block;
-	margin: 25px 0;
-}
-}
-</style>
-{{< /css.inline >}}
+```{r load-libraries, include=FALSE}
+library(tidyverse)
+library(mosaic)
+library(ggthemes)
+library(lubridate)
+library(here)
+library(skimr)
+library(janitor)
+library(httr)
+library(readxl)
+library(vroom)
+```
+
+# Biden's Approval Margins
+
+www.fivethirtyeight.com has detailed data on [all polls that track the president's approval]
+(https://projects.fivethirtyeight.com/biden-approval-ratings)
+
+```{r fix date and calculate net approval rate, cache=TRUE}
+
+# Import approval polls data directly off fivethirtyeight website
+approval_polllist <- read_csv('https://projects.fivethirtyeight.com/biden-approval-data/approval_polllist.csv') 
+
+glimpse(approval_polllist)
+
+# Use `lubridate` to fix dates, as they are given as characters.
+approval_polllist <- approval_polllist %>% 
+  mutate(enddate = mdy(enddate))
+
+```
+
+## Create a plot
+
+What I would like you to do is to calculate the average net approval rate (approve- disapprove) for each week since he got into office. I want you plot the net approval, along with its 95% confidence interval. There are various dates given for each poll, please use `enddate`, i.e., the date the poll ended.
+
+Also, please add an orange line at zero. Your plot should look like this:
+
+```{r trump_margins, echo=FALSE, out.width="100%"}
+knitr::include_graphics(here::here("images", "biden_approval_margin.png"), error = FALSE)
+```
+
+```{r net approval margin for Biden}
+
+#tidy data and calculate CI using formula. We concentrate only on subgroup "voters"
+net_approval <- approval_polllist %>% 
+  filter(!is.na(subgroup), subgroup=="Voters") %>%
+  #using lubridate to get week number
+  mutate(week = isoweek(enddate),
+         net_approval_day = approve - disapprove) %>% 
+  group_by(week) %>%
+  summarise(mean_net_approval = mean(net_approval_day),
+            sd_net_approval = sd(net_approval_day),
+            count = n(),
+            se_twitter = sd_net_approval / sqrt(count),
+            t_critical = qt(0.975, count - 1),
+            lower_ci =  mean_net_approval - t_critical*se_twitter,
+            upper_ci = mean_net_approval + t_critical*se_twitter)
+```
+
+```{r Biden net approval rate plot, fig.align="center", fig.height=18, fig.width=26}
+#plot Biden's weekly net approval rate
+ggplot(net_approval, 
+       aes(x= week, 
+           y= mean_net_approval)) +
+  geom_line(color = "red")+
+  geom_point(color = "red", size = 1)+
+  geom_smooth(color = "blue",
+              level = 0,
+              size = 1)+
+  #add orange line at zero
+  geom_hline(yintercept=0, 
+             color = "orange", 
+             size = 2)+
+  theme_minimal()+
+  #add confidence band using calculated CI
+  geom_ribbon(aes(ymin = lower_ci, 
+                  ymax = upper_ci),
+              alpha=0.3,
+              fill = "grey",
+              color = "red") + 
+  labs(
+    title = "Estimating Approval Margin (approve-disapprove) for Joe Biden",
+    subtitle = "Weekly average approval of subgroup \"Voters\"",
+    x = "Week of the year",
+    y = "Average Approval Margin (approve-disapprove)")+
+  scale_y_continuous(breaks=seq(-15,10,2.5), limits=c(-15,40))+
+  scale_x_continuous(breaks=seq(0,40,13))+
+  theme(
+    axis.text.x = element_text(size = 18),
+    axis.text.y = element_text(size = 18),
+    axis.title.x = element_text(size=22, face="bold"),
+    axis.title.y = element_text(size=22, face="bold"),
+    plot.title = element_text(size = 22, face="bold"),
+    plot.subtitle = element_text(size=20, face="bold")
+  )+
+   annotate("text", x=19.5, y=20, label="2021", color = "#333333", size=8)
+
+
+```
+
+## Compare Confidence Intervals
+
+Compare the confidence intervals for `week 4` and `week 25`. 
+
+```{r compare week 4 and 25 confidence intervals for approval rate}
+net_approval_4_25 <- net_approval %>% 
+  filter(week %in% c(4, 25)) %>% 
+  mutate(
+    ci_width = upper_ci - lower_ci) %>% 
+  select(week, lower_ci, upper_ci, ci_width)
+
+net_approval_4_25
+  
+```
+> Can you explain what's going on? One paragraph would be enough.
+
+From the results, we can clearly see that the confidence interval for Biden's net approval rate has been narrower from week 4 to week 25. The standard deviation in approval ratings is much larger in week 4 than in week 25, which generates a higher standard error and consequently a wider confidence interval. We assume this is because as after Biden has been elected for a longer period of time in week 25 (almost half a year), voters would become more clear about their approval or disapproval to the president. After Americans took over 25-week time to evaluate their newly elected president, they would probably have a clearer attitude towards Biden's policy changes, administration and national strategies. These clearer perceptions then result in this decreasing variance in approval ratings, consequently a lower standard deviation and ultimately more narrow confidence intervals.
