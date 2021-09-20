@@ -1,5 +1,5 @@
 ---
-avatar: /images/pic09.jpg
+avatar: /images/pic01.jpg
 bio: |
   Currently Reading for Masters in Analytics and Management at London Business School.
 featured: true
