@@ -1,6 +1,6 @@
 ---
 authors:
-- Rory Yu
+- Hugo Authors
 date: "2019-03-09"
 excerpt: Lorem Ipsum Dolor Si Amet
 hero: /images/hero-4.jpg

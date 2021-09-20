@@ -1,6 +1,6 @@
 ---
 authors:
-- Rory Yu
+- Hugo Authors
 date: "`r Sys.Date()`"
 excerpt: 
 hero: /images/pic04.jpg
