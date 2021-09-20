@@ -2,8 +2,10 @@
 title: "Biden's Approval Margins"
 author: "Rory Yu"
 date: "`r Sys.Date()`"
-categories: ["R"]
-tags: ["R Markdown", "plot"]
+categories: R
+tags:
+- R Markdown
+- plot
 ---
 
 

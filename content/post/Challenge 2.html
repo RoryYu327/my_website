@@ -1,0 +1,1004 @@
+---
+title: "Session 4: Homework 2"
+author: "Study Group 1: Jiangxia Yu; Marianna Taki; Yuting Wu; Ferdinand Wohlenberg; Massimiliano Ursig; Tanisha Yadav"
+date: "2021-09-20"
+output:
+  html_document:
+    theme: flatly
+    highlight: zenburn
+    number_sections: yes
+    toc: yes
+    toc_float: yes
+    code_folding: show
+---
+
+<script src="Challenge 2_files/header-attrs/header-attrs.js"></script>
+<script src="Challenge 2_files/kePrint/kePrint.js"></script>
+<link href="Challenge 2_files/lightable/lightable.css" rel="stylesheet" />
+
+
+<div id="gapminder-revisited" class="section level1">
+<h1>Gapminder revisited</h1>
+<p>Recall the <code>gapminder</code> data frame from the gapminder package. That data frame contains just six columns from the larger <a href="https://www.gapminder.org/data/">data in Gapminder World</a>. In this part, you will join a few dataframes with more data than the ‘gapminder’ package. Specifically, you will look at data on</p>
+<ul>
+<li>Life expectancy at birth (life_expectancy_years.csv)</li>
+<li>GDP per capita in constant 2010 US$ (<a href="https://data.worldbank.org/indicator/NY.GDP.PCAP.KD" class="uri">https://data.worldbank.org/indicator/NY.GDP.PCAP.KD</a>)</li>
+<li>Female fertility: The number of babies per woman (<a href="https://data.worldbank.org/indicator/SP.DYN.TFRT.IN" class="uri">https://data.worldbank.org/indicator/SP.DYN.TFRT.IN</a>)</li>
+<li>Primary school enrollment as % of children attending primary school (<a href="https://data.worldbank.org/indicator/SE.PRM.NENR" class="uri">https://data.worldbank.org/indicator/SE.PRM.NENR</a>)</li>
+<li>Mortality rate, for under 5, per 1000 live births (<a href="https://data.worldbank.org/indicator/SH.DYN.MORT" class="uri">https://data.worldbank.org/indicator/SH.DYN.MORT</a>)</li>
+<li>HIV prevalence (adults_with_hiv_percent_age_15_49.csv): The estimated number of people living with HIV per 100 population of age group 15-49.</li>
+</ul>
+<p>You must use the <code>wbstats</code> package to download data from the World Bank. The relevant World Bank indicators are <code>SP.DYN.TFRT.IN</code>, <code>SE.PRM.NENR</code>, <code>NY.GDP.PCAP.KD</code>, and <code>SH.DYN.MORT</code></p>
+<pre class="r"><code># load gapminder HIV data
+hiv &lt;- read_csv(here::here(&quot;data&quot;,&quot;adults_with_hiv_percent_age_15_49.csv&quot;))
+life_expectancy &lt;- read_csv(here::here(&quot;data&quot;,&quot;life_expectancy_years.csv&quot;))
+
+# get World bank data using wbstats
+indicators &lt;- c(&quot;SP.DYN.TFRT.IN&quot;,&quot;SE.PRM.NENR&quot;, &quot;SH.DYN.MORT&quot;, &quot;NY.GDP.PCAP.KD&quot;)
+
+library(wbstats)
+
+worldbank_data &lt;- wb_data(country=&quot;countries_only&quot;, #countries only- no aggregates like Latin America, Europe, etc.
+                          indicator = indicators, 
+                          start_date = 1960, 
+                          end_date = 2016)
+
+# get a dataframe of information regarding countries, indicators, sources, regions, indicator topics, lending types, income levels,  from the World Bank API 
+countries &lt;-  wbstats::wb_cachelist$countries
+worldbank_data &lt;- inner_join(worldbank_data, countries, by = &quot;country&quot;)</code></pre>
+<p>You have to join the 3 dataframes (life_expectancy, worldbank_data, and HIV) into one. You may need to tidy your data first and then perform <a href="http://r4ds.had.co.nz/relational-data.html">join operations</a>.</p>
+<pre class="r"><code>#tidy HIV data
+tidy_hiv &lt;- hiv %&gt;% 
+  pivot_longer(
+    cols = 2:34,
+    names_to = &quot;Year&quot;,
+    values_to = &quot;Adult_hiv_percent&quot;)
+
+#tidy life expectancy data
+tidy_life_expectancy &lt;- life_expectancy %&gt;% 
+  pivot_longer(
+    col = 2:302,
+    names_to = &quot;Year&quot;,
+    values_to = &quot;Life_expectancy&quot;)
+
+#tidy worldbank date
+tidy_worldbank_data &lt;- worldbank_data %&gt;%
+  mutate(Year = as.character(date)) %&gt;% 
+  rename(GDP_per_capita = NY.GDP.PCAP.KD,
+         Female_fertility = SP.DYN.TFRT.IN,
+         Primary_school_enrollment = SE.PRM.NENR,
+         Mortality_rate = SH.DYN.MORT)
+
+#firstly join HIV and life expectancy data; then join with worldbank data all using country and year
+joined_data &lt;- list(tidy_hiv, tidy_life_expectancy, tidy_worldbank_data) %&gt;% 
+  reduce(inner_join, by = c(&quot;country&quot;, &quot;Year&quot;))</code></pre>
+<blockquote>
+<p>Think about what type makes the most sense <strong>and explain why you chose it</strong>.</p>
+</blockquote>
+<p>We used inner_join to join 3 dataframes because inner_join would take intersection of different dataframes and ensure we can perform the following relationship analyses with required data. Although some observations have NA entries and are still included in the joined data, we have excluded such NA entries and the perform the analyses.<br />
+Also, we are using inner_join() because it joins dataframes according to the provided condition. In this case, only observations with the same country and year available would be joined together.</p>
+<ol style="list-style-type: decimal">
+<li>What is the relationship between HIV prevalence and life expectancy? Generate a scatterplot with a smoothing line to report your results. You may find faceting useful</li>
+</ol>
+<pre class="r"><code>HIV_Life &lt;- joined_data %&gt;% 
+  #clear out all NA
+  filter(!is.na(Adult_hiv_percent))
+
+ggplot(HIV_Life, 
+       aes(x = Adult_hiv_percent,
+           y = Life_expectancy))+
+  geom_point(alpha=0.3)+
+  geom_smooth(method = &quot;lm&quot;, formula = y ~ x)+
+  theme_bw()+
+  labs(
+    title = &quot;Relationship between HIV prevalence and life expectancy&quot;,
+    subtitle = &quot;&quot;,
+    x = &quot;% Adults between 15 and 49 with HIV&quot;,
+    y = &quot;Life expectancy (in years)&quot;
+  )+
+  facet_wrap(vars(region), scales=&quot;free&quot;)+
+  #to remove the skewness on a-axis
+  scale_x_log10() </code></pre>
+<p><img src="/post/Challenge%202_files/figure-html/relationship%20between%20HIV%20prevalence%20and%20life%20expectancy-1.png" width="960" style="display: block; margin: auto;" />
+Generally, there is a negative relationship between HIV prevalence and Life Expectancy. When there are more people between 15 and 49 getting HIV, the life expectancy of that country would decrease. Such trend is most evident in regions like Latin America, Sub-Saharan Africa and Middle East &amp; North Africa.<br />
+However, for Europe and Central Asia, the trend has been positive. It does not suggest that more HIV cases would boost life expectancy. It might be attributed to the local healthcare improvement and higher budget for healthcare.</p>
+<ol start="2" style="list-style-type: decimal">
+<li>What is the relationship between fertility rate and GDP per capita? Generate a scatterplot with a smoothing line to report your results. You may find facetting by region useful.</li>
+</ol>
+<pre class="r"><code>Fert_GDP &lt;- joined_data %&gt;% 
+  #clear out all NA
+  filter(!is.na(Female_fertility))
+
+ggplot(Fert_GDP, 
+       aes(x = GDP_per_capita,
+           y = Female_fertility
+           ))+
+  geom_point(alpha=0.3)+
+  geom_smooth(method = &quot;lm&quot;, formula = y ~ x)+
+  theme_bw()+
+  labs(
+    title = &quot;Relationship between GDP per capita and Female fertility&quot;,
+    subtitle = &quot;&quot;,
+    x = &quot;GDP per capita (constant 2010 US$)&quot;,
+    y = &quot;Female fertility (births per woman)&quot;
+  )+
+  facet_wrap(vars(region), scales=&quot;free&quot;)+
+  #to remove the skewness on a-axis
+  scale_x_log10() </code></pre>
+<p><img src="/post/Challenge%202_files/figure-html/relationship%20between%20GDP%20per%20capita%20and%20female%20fertility-1.png" width="960" style="display: block; margin: auto;" />
+Generally, the relationship between GDP per capita and Female fertility is negative. This trend is evident in most regions but North America. There are many explanations:</p>
+<ul>
+<li>Firstly, the relative value of time to females in countries with different GDP per capita are extremely different. Higher GDP per capita would motivate females to work instead of staying at home and raising kids.<br />
+</li>
+<li>Secondly, in countries with higher GDP per capita, the expense to raise and educate a child is far higher than that in low-GDP countries. The competition in higher-GDP countries is also far more fierce, causing parents spending too much money on education.<br />
+</li>
+<li>Thirdly, with high GDP per capita and higher personal income, females would have more choices other than marriage and child-bearing. They would have higher tendency to pursue personal aspirations and left less time for having many children.</li>
+</ul>
+<ol start="3" style="list-style-type: decimal">
+<li>Which regions have the most observations with missing HIV data? Generate a bar chart (<code>geom_col()</code>), in descending order.</li>
+</ol>
+<pre class="r"><code>#count missing HIV values
+Missing_HIV &lt;- joined_data %&gt;% 
+  group_by(region) %&gt;% 
+  count(Adult_hiv_percent = NA) %&gt;% 
+  mutate(n)
+
+ggplot(Missing_HIV, 
+       aes(reorder(region, -n),
+           n))+
+  geom_col()+
+  labs(
+    title = &quot;Missing observations of HIV data in each Continent&quot;,
+    x= &quot;Region&quot;,
+    y = &quot;Count of missing HIV data&quot;)</code></pre>
+<p><img src="/post/Challenge%202_files/figure-html/most%20observations%20with%20missing%20HIV%20data-1.png" width="648" style="display: block; margin: auto;" />
+The Sub-Saharan Africa region has the most missing HIV data in the dataframe. The plot above shows the descending order of missing HIV data of each region.</p>
+<ol start="4" style="list-style-type: decimal">
+<li>How has mortality rate for under 5 changed by region? In each region, find the top 5 countries that have seen the greatest improvement, as well as those 5 countries where mortality rates have had the least improvement or even deterioration.</li>
+</ol>
+<pre class="r"><code>#clear out all NA
+Mortality_plot &lt;- joined_data %&gt;% 
+  filter(!is.na(Mortality_rate))
+
+ggplot(Mortality_plot, 
+       aes(x = Year,
+           y = Mortality_rate,
+           color = region
+           ))+
+  geom_point(alpha=0.3)+
+  theme_bw()+
+  labs(
+    title = &quot;Changes of Mortality rate for under 5 across regions&quot;,
+    subtitle = &quot;&quot;,
+    x = &quot;Year&quot;,
+    y = &quot;Mortality rate for under 5 (per 1000 living births)&quot;,
+    color = &quot;Region&quot;)+
+  facet_wrap(vars(region))+
+  #to remove the skewness on a-axis
+  scale_x_discrete(breaks=seq(1900, 2020, 5))+
+  theme(plot.title = element_text(size=16),
+        axis.title.x = element_text(size=14),
+        axis.title.y = element_text(size=12),
+        axis.text.x = element_text(size=8),
+        axis.text.y = element_text(size=12),
+        strip.text = element_text(size=10),
+        legend.text = element_text(size=10),
+        legend.title = element_text(size=12)
+        )</code></pre>
+<p><img src="/post/Challenge%202_files/figure-html/regional%20difference%20in%20mortality%20rate%20for%20under%205-1.png" width="960" style="display: block; margin: auto;" />
+For Mortality rate for under 5 of different regions, there are huge differences in their changes over time.</p>
+<ul>
+<li>For North America, such rate has been remaining in very low level since 1979.</li>
+<li>For East Asia, Middle East &amp; North Africa, Europe and Latin America, even though in 1979 the mortality rate was in high levels, it has been decreasing since 1979 to approximately half of the initial level.</li>
+<li>For South Asia, the mortality rate in 1979 was higher than the rate in East Asia. But through the development since then, the mortality rate has also reduced to half of its level.</li>
+<li>For Sub-Saharan Africa, the mortality rate in 1979 has remained the highest among all regions since then. Within the region, the national differences are huge as well. Even in 2011, there are still countries where 150 new births out of 1000 would die before the age of 5.</li>
+</ul>
+<pre class="r"><code>Mortality_rank &lt;- joined_data %&gt;% 
+  group_by(country) %&gt;% 
+  mutate(
+    #calculate yearly percentage change in mortality rate
+    difference_of_rate = (Mortality_rate - lag(Mortality_rate))/lag(Mortality_rate)*100,
+    #define initial level
+    First = head(Mortality_rate, 1),
+    #calculate 1979-2011 overall change in mortality rate
+    BaselineChange = case_when(Mortality_rate != First ~ (Mortality_rate - First)/First*100,
+                               TRUE ~ 1 * NA)) %&gt;% 
+  filter(Year == 2011, !is.na(BaselineChange)) %&gt;% 
+  select(country, region, BaselineChange) %&gt;% 
+  group_by(region)
+
+Minimum_change_list &lt;- Mortality_rank %&gt;% 
+  slice_max(order_by = BaselineChange, n = 5) %&gt;% 
+  knitr::kable(bootstrap_options = c (&quot;striped&quot;,&quot;hover&quot;,&quot;condensed&quot;,&quot;responsive&quot;), caption = &quot;Top 5 countries in each region seeing the smallest changes in mortality rate&quot;)%&gt;%
+  kableExtra::kable_styling()
+
+Maximum_change_list &lt;- Mortality_rank %&gt;% 
+  slice_min(order_by = BaselineChange, n = 5) %&gt;% 
+  knitr::kable(bootstrap_options = c (&quot;striped&quot;,&quot;hover&quot;,&quot;condensed&quot;,&quot;responsive&quot;), caption = &quot;Top 5 countries in each region seeing the largest changes in mortality rate&quot;) %&gt;%
+  kableExtra::kable_styling()
+
+Minimum_change_list</code></pre>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>
+(#tab:top 5 and bottom 5 countries in each region)Top 5 countries in each region seeing the smallest changes in mortality rate
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+country
+</th>
+<th style="text-align:left;">
+region
+</th>
+<th style="text-align:right;">
+BaselineChange
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Papua New Guinea
+</td>
+<td style="text-align:left;">
+East Asia &amp; Pacific
+</td>
+<td style="text-align:right;">
+-48.4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Fiji
+</td>
+<td style="text-align:left;">
+East Asia &amp; Pacific
+</td>
+<td style="text-align:right;">
+-49.2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Myanmar
+</td>
+<td style="text-align:left;">
+East Asia &amp; Pacific
+</td>
+<td style="text-align:right;">
+-57.5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Philippines
+</td>
+<td style="text-align:left;">
+East Asia &amp; Pacific
+</td>
+<td style="text-align:right;">
+-61.1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+New Zealand
+</td>
+<td style="text-align:left;">
+East Asia &amp; Pacific
+</td>
+<td style="text-align:right;">
+-62.7
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Bulgaria
+</td>
+<td style="text-align:left;">
+Europe &amp; Central Asia
+</td>
+<td style="text-align:right;">
+-58.2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Switzerland
+</td>
+<td style="text-align:left;">
+Europe &amp; Central Asia
+</td>
+<td style="text-align:right;">
+-58.3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Ukraine
+</td>
+<td style="text-align:left;">
+Europe &amp; Central Asia
+</td>
+<td style="text-align:right;">
+-59.3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Denmark
+</td>
+<td style="text-align:left;">
+Europe &amp; Central Asia
+</td>
+<td style="text-align:right;">
+-60.2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Netherlands
+</td>
+<td style="text-align:left;">
+Europe &amp; Central Asia
+</td>
+<td style="text-align:right;">
+-61.6
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Trinidad and Tobago
+</td>
+<td style="text-align:left;">
+Latin America &amp; Caribbean
+</td>
+<td style="text-align:right;">
+-45.3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Barbados
+</td>
+<td style="text-align:left;">
+Latin America &amp; Caribbean
+</td>
+<td style="text-align:right;">
+-47.9
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Guyana
+</td>
+<td style="text-align:left;">
+Latin America &amp; Caribbean
+</td>
+<td style="text-align:right;">
+-48.2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Panama
+</td>
+<td style="text-align:left;">
+Latin America &amp; Caribbean
+</td>
+<td style="text-align:right;">
+-57.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Jamaica
+</td>
+<td style="text-align:left;">
+Latin America &amp; Caribbean
+</td>
+<td style="text-align:right;">
+-58.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Djibouti
+</td>
+<td style="text-align:left;">
+Middle East &amp; North Africa
+</td>
+<td style="text-align:right;">
+-53.3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Malta
+</td>
+<td style="text-align:left;">
+Middle East &amp; North Africa
+</td>
+<td style="text-align:right;">
+-61.4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Qatar
+</td>
+<td style="text-align:left;">
+Middle East &amp; North Africa
+</td>
+<td style="text-align:right;">
+-76.6
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Israel
+</td>
+<td style="text-align:left;">
+Middle East &amp; North Africa
+</td>
+<td style="text-align:right;">
+-77.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Morocco
+</td>
+<td style="text-align:left;">
+Middle East &amp; North Africa
+</td>
+<td style="text-align:right;">
+-78.1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+United States
+</td>
+<td style="text-align:left;">
+North America
+</td>
+<td style="text-align:right;">
+-53.8
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Canada
+</td>
+<td style="text-align:left;">
+North America
+</td>
+<td style="text-align:right;">
+-57.9
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Pakistan
+</td>
+<td style="text-align:left;">
+South Asia
+</td>
+<td style="text-align:right;">
+-49.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Afghanistan
+</td>
+<td style="text-align:left;">
+South Asia
+</td>
+<td style="text-align:right;">
+-66.1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+India
+</td>
+<td style="text-align:left;">
+South Asia
+</td>
+<td style="text-align:right;">
+-68.2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Bangladesh
+</td>
+<td style="text-align:left;">
+South Asia
+</td>
+<td style="text-align:right;">
+-77.3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Sri Lanka
+</td>
+<td style="text-align:left;">
+South Asia
+</td>
+<td style="text-align:right;">
+-77.5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Central African Republic
+</td>
+<td style="text-align:left;">
+Sub-Saharan Africa
+</td>
+<td style="text-align:right;">
+-23.6
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Lesotho
+</td>
+<td style="text-align:left;">
+Sub-Saharan Africa
+</td>
+<td style="text-align:right;">
+-26.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Zimbabwe
+</td>
+<td style="text-align:left;">
+Sub-Saharan Africa
+</td>
+<td style="text-align:right;">
+-26.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Nigeria
+</td>
+<td style="text-align:left;">
+Sub-Saharan Africa
+</td>
+<td style="text-align:right;">
+-38.1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Chad
+</td>
+<td style="text-align:left;">
+Sub-Saharan Africa
+</td>
+<td style="text-align:right;">
+-40.1
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>Maximum_change_list</code></pre>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>
+(#tab:top 5 and bottom 5 countries in each region)Top 5 countries in each region seeing the largest changes in mortality rate
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+country
+</th>
+<th style="text-align:left;">
+region
+</th>
+<th style="text-align:right;">
+BaselineChange
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Mongolia
+</td>
+<td style="text-align:left;">
+East Asia &amp; Pacific
+</td>
+<td style="text-align:right;">
+-83.2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Singapore
+</td>
+<td style="text-align:left;">
+East Asia &amp; Pacific
+</td>
+<td style="text-align:right;">
+-81.3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cambodia
+</td>
+<td style="text-align:left;">
+East Asia &amp; Pacific
+</td>
+<td style="text-align:right;">
+-80.3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Thailand
+</td>
+<td style="text-align:left;">
+East Asia &amp; Pacific
+</td>
+<td style="text-align:right;">
+-79.5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+China
+</td>
+<td style="text-align:left;">
+East Asia &amp; Pacific
+</td>
+<td style="text-align:right;">
+-77.7
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Portugal
+</td>
+<td style="text-align:left;">
+Europe &amp; Central Asia
+</td>
+<td style="text-align:right;">
+-87.5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Turkey
+</td>
+<td style="text-align:left;">
+Europe &amp; Central Asia
+</td>
+<td style="text-align:right;">
+-87.3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Greece
+</td>
+<td style="text-align:left;">
+Europe &amp; Central Asia
+</td>
+<td style="text-align:right;">
+-81.4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Georgia
+</td>
+<td style="text-align:left;">
+Europe &amp; Central Asia
+</td>
+<td style="text-align:right;">
+-78.8
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Luxembourg
+</td>
+<td style="text-align:left;">
+Europe &amp; Central Asia
+</td>
+<td style="text-align:right;">
+-78.4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Peru
+</td>
+<td style="text-align:left;">
+Latin America &amp; Caribbean
+</td>
+<td style="text-align:right;">
+-85.3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+El Salvador
+</td>
+<td style="text-align:left;">
+Latin America &amp; Caribbean
+</td>
+<td style="text-align:right;">
+-83.7
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Brazil
+</td>
+<td style="text-align:left;">
+Latin America &amp; Caribbean
+</td>
+<td style="text-align:right;">
+-82.2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Ecuador
+</td>
+<td style="text-align:left;">
+Latin America &amp; Caribbean
+</td>
+<td style="text-align:right;">
+-81.8
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Nicaragua
+</td>
+<td style="text-align:left;">
+Latin America &amp; Caribbean
+</td>
+<td style="text-align:right;">
+-80.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Oman
+</td>
+<td style="text-align:left;">
+Middle East &amp; North Africa
+</td>
+<td style="text-align:right;">
+-90.4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Algeria
+</td>
+<td style="text-align:left;">
+Middle East &amp; North Africa
+</td>
+<td style="text-align:right;">
+-83.6
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Tunisia
+</td>
+<td style="text-align:left;">
+Middle East &amp; North Africa
+</td>
+<td style="text-align:right;">
+-82.3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Lebanon
+</td>
+<td style="text-align:left;">
+Middle East &amp; North Africa
+</td>
+<td style="text-align:right;">
+-81.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Morocco
+</td>
+<td style="text-align:left;">
+Middle East &amp; North Africa
+</td>
+<td style="text-align:right;">
+-78.1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Canada
+</td>
+<td style="text-align:left;">
+North America
+</td>
+<td style="text-align:right;">
+-57.9
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+United States
+</td>
+<td style="text-align:left;">
+North America
+</td>
+<td style="text-align:right;">
+-53.8
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Maldives
+</td>
+<td style="text-align:left;">
+South Asia
+</td>
+<td style="text-align:right;">
+-91.8
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Bhutan
+</td>
+<td style="text-align:left;">
+South Asia
+</td>
+<td style="text-align:right;">
+-80.2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Nepal
+</td>
+<td style="text-align:left;">
+South Asia
+</td>
+<td style="text-align:right;">
+-79.4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Sri Lanka
+</td>
+<td style="text-align:left;">
+South Asia
+</td>
+<td style="text-align:right;">
+-77.5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Bangladesh
+</td>
+<td style="text-align:left;">
+South Asia
+</td>
+<td style="text-align:right;">
+-77.3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Rwanda
+</td>
+<td style="text-align:left;">
+Sub-Saharan Africa
+</td>
+<td style="text-align:right;">
+-75.5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Eritrea
+</td>
+<td style="text-align:left;">
+Sub-Saharan Africa
+</td>
+<td style="text-align:right;">
+-72.8
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Malawi
+</td>
+<td style="text-align:left;">
+Sub-Saharan Africa
+</td>
+<td style="text-align:right;">
+-70.3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Senegal
+</td>
+<td style="text-align:left;">
+Sub-Saharan Africa
+</td>
+<td style="text-align:right;">
+-70.3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Ethiopia
+</td>
+<td style="text-align:left;">
+Sub-Saharan Africa
+</td>
+<td style="text-align:right;">
+-67.7
+</td>
+</tr>
+</tbody>
+</table>
+<ol start="5" style="list-style-type: decimal">
+<li>Is there a relationship between primary school enrollment and fertility rate?</li>
+</ol>
+<pre class="r"><code>#clear out all NA
+Fert_PrimEnrol &lt;- joined_data %&gt;% 
+  filter(!is.na(Primary_school_enrollment), !is.na(Female_fertility))
+
+ggplot(Fert_PrimEnrol, 
+       aes(x = Primary_school_enrollment,
+           y = Female_fertility))+
+  geom_point(alpha=0.3)+
+  geom_smooth(method = &quot;lm&quot;,
+              formula = y ~ x)+
+  theme_bw()+
+  labs(
+    title = &quot;Relationship between Primary School Enrollment and Female fertility&quot;,
+    subtitle = &quot;&quot;,
+    x = &quot;Primary School Enrollment (% net)&quot;,
+    y = &quot;Female fertility (births per woman)&quot;
+  )+
+  facet_wrap(vars(region), scales=&quot;free&quot;)+
+  #to remove the skewness on axes
+  scale_x_log10()+
+  scale_y_log10()+
+  theme(plot.title = element_text(size=14),
+        axis.title.x = element_text(size=14),
+        axis.title.y = element_text(size=14),
+        axis.text.x = element_text(size=12),
+        axis.text.y = element_text(size=14),
+        strip.text = element_text(size=12),
+        )</code></pre>
+<p><img src="/post/Challenge%202_files/figure-html/relationship%20between%20primary%20school%20enrollment%20and%20female%20fertility-1.png" width="960" style="display: block; margin: auto;" />
+Generally, there is a negative relationship between primary school enrollment and female fertility. However, it is also worth noting that such relationship is less significant in Europe &amp; Central Asia. There are a huge cluster of observations on the right of the distribution and the best fitting line is actually positive sloping. Here are some possible explanations for the negative trend in regions such as Sub-Saharan Africa and Middle East:</p>
+<ul>
+<li>Firstly, primary school enrollment could be used as a proxy for national development, wealthiness and cultural value in education. In countries with higher primary school enrollment, it can be expected that females could spend more time pursuing personal goals and spend less time having kids.</li>
+<li>Secondly, higher primary school enrollment could help promote maternal and child health. Literacy developed in primary school would largely help females read and understand labels or caveats on drug bottles or on many instructions. Therefore, they wouldn’t need to give birth to many children.</li>
+<li>Thirdly, having primary school education would help postpone marriage for many teenage girls, especially in rural and less developed areas. Being older getting into marriage, females would on average have less probability in having kids.</li>
+</ul>
+</div>
