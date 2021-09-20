@@ -2,7 +2,7 @@
 title: "Biden's Approval Margins"
 author: "Rory Yu"
 date: "`r Sys.Date()`"
-hero: images/pic03.jpg
+hero: /images/banner.jpg
 output:
   html_document:
     theme: flatly
