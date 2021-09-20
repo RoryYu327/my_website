@@ -1,7 +1,7 @@
 ---
 hero:
-  heading: Welcome to Novela, the simplest way to start publishing with Hugo.
+  heading: Welcome to my page. This is Rory Yu
   maxWidthPX: 652
 seo:
-  image: /images/hero-2.jpg
+  image: /images/pic01.jpg
 ---
