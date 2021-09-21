@@ -3,7 +3,7 @@ authors:
 - Hugo Authors
 date: "2021-09-21"
 excerpt: Analysis of the relationship between HIV prevalence and Life expectancy
-hero: /images/pic04.jpg
+hero: 
 title: "HIV Prevalence and Life Expectancy"
 ---
 
@@ -12,9 +12,9 @@ title: "HIV Prevalence and Life Expectancy"
 <link href="HIV_Life Expectancy_files/lightable/lightable.css" rel="stylesheet" />
 
 
-<div id="gapminder-revisited" class="section level1">
-<h1>Gapminder revisited</h1>
-<p>Recall the <code>gapminder</code> data frame from the gapminder package. That data frame contains just six columns from the larger <a href="https://www.gapminder.org/data/">data in Gapminder World</a>. In this part, you will join a few dataframes with more data than the ‘gapminder’ package. Specifically, you will look at data on</p>
+<div id="clean-data-and-join-datasets" class="section level1">
+<h1>Clean data and join datasets</h1>
+<p>We have the <code>gapminder</code> data frame from the gapminder package. This data frame contains just six columns from the larger <a href="https://www.gapminder.org/data/">data in Gapminder World</a>. Specifically, we will look at data on</p>
 <ul>
 <li>Life expectancy at birth (life_expectancy_years.csv)</li>
 <li>GDP per capita in constant 2010 US$ (<a href="https://data.worldbank.org/indicator/NY.GDP.PCAP.KD" class="uri">https://data.worldbank.org/indicator/NY.GDP.PCAP.KD</a>)</li>
@@ -23,7 +23,7 @@ title: "HIV Prevalence and Life Expectancy"
 <li>Mortality rate, for under 5, per 1000 live births (<a href="https://data.worldbank.org/indicator/SH.DYN.MORT" class="uri">https://data.worldbank.org/indicator/SH.DYN.MORT</a>)</li>
 <li>HIV prevalence (adults_with_hiv_percent_age_15_49.csv): The estimated number of people living with HIV per 100 population of age group 15-49.</li>
 </ul>
-<p>You must use the <code>wbstats</code> package to download data from the World Bank. The relevant World Bank indicators are <code>SP.DYN.TFRT.IN</code>, <code>SE.PRM.NENR</code>, <code>NY.GDP.PCAP.KD</code>, and <code>SH.DYN.MORT</code></p>
+<p>Then we will use <code>wbstats</code> package to download data from the World Bank. The relevant World Bank indicators are <code>SP.DYN.TFRT.IN</code>, <code>SE.PRM.NENR</code>, <code>NY.GDP.PCAP.KD</code>, and <code>SH.DYN.MORT</code></p>
 <pre class="r"><code># load gapminder HIV data
 hiv &lt;- read_csv(here::here(&quot;data&quot;,&quot;adults_with_hiv_percent_age_15_49.csv&quot;))
 life_expectancy &lt;- read_csv(here::here(&quot;data&quot;,&quot;life_expectancy_years.csv&quot;))
@@ -41,7 +41,9 @@ worldbank_data &lt;- wb_data(country=&quot;countries_only&quot;, #countries only
 # get a dataframe of information regarding countries, indicators, sources, regions, indicator topics, lending types, income levels,  from the World Bank API 
 countries &lt;-  wbstats::wb_cachelist$countries
 worldbank_data &lt;- inner_join(worldbank_data, countries, by = &quot;country&quot;)</code></pre>
-<p>You have to join the 3 dataframes (life_expectancy, worldbank_data, and HIV) into one. You may need to tidy your data first and then perform <a href="http://r4ds.had.co.nz/relational-data.html">join operations</a>.</p>
+<div id="join-the-datasets" class="section level2">
+<h2>Join the datasets</h2>
+<p>We will join the 3 dataframes (life_expectancy, worldbank_data, and HIV) into one.</p>
 <pre class="r"><code>#tidy HIV data
 tidy_hiv &lt;- hiv %&gt;% 
   pivot_longer(
@@ -67,14 +69,14 @@ tidy_worldbank_data &lt;- worldbank_data %&gt;%
 #firstly join HIV and life expectancy data; then join with worldbank data all using country and year
 joined_data &lt;- list(tidy_hiv, tidy_life_expectancy, tidy_worldbank_data) %&gt;% 
   reduce(inner_join, by = c(&quot;country&quot;, &quot;Year&quot;))</code></pre>
-<blockquote>
-<p>Think about what type makes the most sense <strong>and explain why you chose it</strong>.</p>
-</blockquote>
 <p>We used inner_join to join 3 dataframes because inner_join would take intersection of different dataframes and ensure we can perform the following relationship analyses with required data. Although some observations have NA entries and are still included in the joined data, we have excluded such NA entries and the perform the analyses.<br />
 Also, we are using inner_join() because it joins dataframes according to the provided condition. In this case, only observations with the same country and year available would be joined together.</p>
-<ol style="list-style-type: decimal">
-<li>What is the relationship between HIV prevalence and life expectancy? Generate a scatterplot with a smoothing line to report your results. You may find faceting useful</li>
-</ol>
+</div>
+</div>
+<div id="relationship-analysis" class="section level1">
+<h1>Relationship analysis</h1>
+<div id="relationship-between-hiv-prevalence-and-life-expectancy" class="section level2">
+<h2>Relationship between HIV prevalence and life expectancy</h2>
 <pre class="r"><code>HIV_Life &lt;- joined_data %&gt;% 
   #clear out all NA
   filter(!is.na(Adult_hiv_percent))
@@ -97,9 +99,9 @@ ggplot(HIV_Life,
 <p><img src="/post/HIV_Life%20Expectancy_files/figure-html/relationship%20between%20HIV%20prevalence%20and%20life%20expectancy-1.png" width="960" style="display: block; margin: auto;" />
 Generally, there is a negative relationship between HIV prevalence and Life Expectancy. When there are more people between 15 and 49 getting HIV, the life expectancy of that country would decrease. Such trend is most evident in regions like Latin America, Sub-Saharan Africa and Middle East &amp; North Africa.<br />
 However, for Europe and Central Asia, the trend has been positive. It does not suggest that more HIV cases would boost life expectancy. It might be attributed to the local healthcare improvement and higher budget for healthcare.</p>
-<ol start="2" style="list-style-type: decimal">
-<li>What is the relationship between fertility rate and GDP per capita? Generate a scatterplot with a smoothing line to report your results. You may find facetting by region useful.</li>
-</ol>
+</div>
+<div id="relationship-between-fertility-rate-and-gdp-per-capita" class="section level2">
+<h2>Relationship between fertility rate and GDP per capita</h2>
 <pre class="r"><code>Fert_GDP &lt;- joined_data %&gt;% 
   #clear out all NA
   filter(!is.na(Female_fertility))
@@ -129,9 +131,9 @@ Generally, the relationship between GDP per capita and Female fertility is negat
 </li>
 <li>Thirdly, with high GDP per capita and higher personal income, females would have more choices other than marriage and child-bearing. They would have higher tendency to pursue personal aspirations and left less time for having many children.</li>
 </ul>
-<ol start="3" style="list-style-type: decimal">
-<li>Which regions have the most observations with missing HIV data? Generate a bar chart (<code>geom_col()</code>), in descending order.</li>
-</ol>
+</div>
+<div id="regions-with-the-most-observations-with-missing-hiv-data" class="section level2">
+<h2>Regions with the most observations with missing HIV data</h2>
 <pre class="r"><code>#count missing HIV values
 Missing_HIV &lt;- joined_data %&gt;% 
   group_by(region) %&gt;% 
@@ -139,7 +141,7 @@ Missing_HIV &lt;- joined_data %&gt;%
   mutate(n)
 
 ggplot(Missing_HIV, 
-       aes(reorder(region, -n),
+       aes(y = reorder(region, n),
            n))+
   geom_col()+
   labs(
@@ -148,9 +150,9 @@ ggplot(Missing_HIV,
     y = &quot;Count of missing HIV data&quot;)</code></pre>
 <p><img src="/post/HIV_Life%20Expectancy_files/figure-html/most%20observations%20with%20missing%20HIV%20data-1.png" width="648" style="display: block; margin: auto;" />
 The Sub-Saharan Africa region has the most missing HIV data in the dataframe. The plot above shows the descending order of missing HIV data of each region.</p>
-<ol start="4" style="list-style-type: decimal">
-<li>How has mortality rate for under 5 changed by region? In each region, find the top 5 countries that have seen the greatest improvement, as well as those 5 countries where mortality rates have had the least improvement or even deterioration.</li>
-</ol>
+</div>
+<div id="mortality-rate-for-under-5-changed-by-region." class="section level2">
+<h2>Mortality rate for under 5 changed by region.</h2>
 <pre class="r"><code>#clear out all NA
 Mortality_plot &lt;- joined_data %&gt;% 
   filter(!is.na(Mortality_rate))
@@ -188,6 +190,9 @@ For Mortality rate for under 5 of different regions, there are huge differences 
 <li>For South Asia, the mortality rate in 1979 was higher than the rate in East Asia. But through the development since then, the mortality rate has also reduced to half of its level.</li>
 <li>For Sub-Saharan Africa, the mortality rate in 1979 has remained the highest among all regions since then. Within the region, the national differences are huge as well. Even in 2011, there are still countries where 150 new births out of 1000 would die before the age of 5.</li>
 </ul>
+</div>
+<div id="top-5-and-bottom-5-countries-in-each-region" class="section level2">
+<h2>Top 5 and bottom 5 countries in each region</h2>
 <pre class="r"><code>Mortality_rank &lt;- joined_data %&gt;% 
   group_by(country) %&gt;% 
   mutate(
@@ -958,9 +963,9 @@ Sub-Saharan Africa
 </tr>
 </tbody>
 </table>
-<ol start="5" style="list-style-type: decimal">
-<li>Is there a relationship between primary school enrollment and fertility rate?</li>
-</ol>
+</div>
+<div id="relationship-between-primary-school-enrollment-and-fertility-rate" class="section level2">
+<h2>Relationship between primary school enrollment and fertility rate</h2>
 <pre class="r"><code>#clear out all NA
 Fert_PrimEnrol &lt;- joined_data %&gt;% 
   filter(!is.na(Primary_school_enrollment), !is.na(Female_fertility))
@@ -996,4 +1001,5 @@ Generally, there is a negative relationship between primary school enrollment an
 <li>Secondly, higher primary school enrollment could help promote maternal and child health. Literacy developed in primary school would largely help females read and understand labels or caveats on drug bottles or on many instructions. Therefore, they wouldn’t need to give birth to many children.</li>
 <li>Thirdly, having primary school education would help postpone marriage for many teenage girls, especially in rural and less developed areas. Being older getting into marriage, females would on average have less probability in having kids.</li>
 </ul>
+</div>
 </div>
