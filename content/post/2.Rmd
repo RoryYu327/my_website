@@ -2,9 +2,9 @@
 authors:
 - Hugo Authors
 date: "`r Sys.Date()`"
-excerpt: 
+excerpt: A plot showing the weekly approval rate for president Biden
 hero: 
-title: 2
+title: "Biden's Approval Margins"
 ---
 
 ```{r setup, include=FALSE}
