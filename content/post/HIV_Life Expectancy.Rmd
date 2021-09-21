@@ -3,7 +3,7 @@ authors:
 - Hugo Authors
 date: "`r Sys.Date()`"
 excerpt: Analysis of the relationship between HIV prevalence and Life expectancy
-hero: /hero/pic02.jpg
+hero: /images/pic02.jpg
 title: "HIV Prevalence and Life Expectancy"
 ---
 
