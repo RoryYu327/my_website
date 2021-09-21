@@ -1,29 +1,29 @@
 ---
 authors:
-- Hugo Authors
-date: "`r Sys.Date()`"
-excerpt: 
-hero: /images/banner.jpg
-title: "Biden's Approval Margins"
+- Rory Yu
+date: "2021-09-20"
+excerpt: Biden's Approval Margins
+hero: /images/pic03.jpg
+title: Biden's Approval Margins
 ---
 
-```{r setup, include = FALSE}
+```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   message = FALSE, 
   warning = FALSE, 
-  tidy = FALSE,
-  size = "small")
-
+  tidy=FALSE,     # display code as typed
+  size="small")   # slightly smaller font for code
 options(digits = 3)
 
 # default figure size
 knitr::opts_chunk$set(
-  fig.width = 6.75, 
-  fig.height = 6.75,
-  fig.align = "center")
+  fig.width=6.75, 
+  fig.height=6.75,
+  fig.align = "center"
+)
 ```
 
-```{r load libraries, include = FALSE}
+```{r load-libraries, include=FALSE}
 library(tidyverse)
 library(mosaic)
 library(ggthemes)
@@ -38,34 +38,38 @@ library(vroom)
 
 # Biden's Approval Margins
 
-In this post, we will use data from <www.fivethirtyeight.com> on all polls that track the president Biden's approval rate in the US.
+www.fivethirtyeight.com has detailed data on [all polls that track the president's approval]
 (https://projects.fivethirtyeight.com/biden-approval-ratings)
 
-## Import data
 ```{r fix date and calculate net approval rate, cache=TRUE}
+
 # Import approval polls data directly off fivethirtyeight website
 approval_polllist <- read_csv('https://projects.fivethirtyeight.com/biden-approval-data/approval_polllist.csv') 
 
 glimpse(approval_polllist)
 
 # Use `lubridate` to fix dates, as they are given as characters.
-# Use enddate as the date of the poll result
 approval_polllist <- approval_polllist %>% 
   mutate(enddate = mdy(enddate))
 
 ```
 
 ## Create a plot
-Using the data, we wish to calculate the average net approval rate (approve - disapprove) for each week since Biden got into office. \n
-Then we would like to plot the net approval rate, along with its 95% confidence interval.
 
-### Tidy data and calculate Confidence Interval
+What I would like you to do is to calculate the average net approval rate (approve- disapprove) for each week since he got into office. I want you plot the net approval, along with its 95% confidence interval. There are various dates given for each poll, please use `enddate`, i.e., the date the poll ended.
+
+Also, please add an orange line at zero. Your plot should look like this:
+
+```{r trump_margins, echo=FALSE, out.width="100%"}
+knitr::include_graphics(here::here("images", "biden_approval_margin.png"), error = FALSE)
+```
+
 ```{r net approval margin for Biden}
-#tidy data and calculate CI using formula. 
+
+#tidy data and calculate CI using formula. We concentrate only on subgroup "voters"
 net_approval <- approval_polllist %>% 
-  #We concentrate only on subgroup "voters"
-  filter(!is.na(subgroup), subgroup == "Voters") %>%
-  #Use lubridate to get week number
+  filter(!is.na(subgroup), subgroup=="Voters") %>%
+  #using lubridate to get week number
   mutate(week = isoweek(enddate),
          net_approval_day = approve - disapprove) %>% 
   group_by(week) %>%
@@ -76,15 +80,10 @@ net_approval <- approval_polllist %>%
             t_critical = qt(0.975, count - 1),
             lower_ci =  mean_net_approval - t_critical*se_twitter,
             upper_ci = mean_net_approval + t_critical*se_twitter)
-
-#Report the weekly net approval rate for Biden
-net_approval %>% 
-  knitr::kable(bootstrap_options = c ("striped","hover","condensed","responsive")) %>%
-  kableExtra::kable_styling()
 ```
 
-### Plot the net approval rate
 ```{r Biden net approval rate plot, fig.align="center", fig.height=18, fig.width=26}
+#plot Biden's weekly net approval rate
 ggplot(net_approval, 
        aes(x= week, 
            y= mean_net_approval)) +
@@ -121,26 +120,23 @@ ggplot(net_approval,
   )+
    annotate("text", x=19.5, y=20, label="2021", color = "#333333", size=8)
 
+
 ```
 
 ## Compare Confidence Intervals
 
-We then compare the confidence intervals for `week 5` and `week 25` to see if there are any changes in Biden's net approval rate.
-```{r compare week 5 and 25 confidence intervals for approval rate}
-net_approval_5_25 <- net_approval %>% 
-  filter(week %in% c(5, 25)) %>% 
+Compare the confidence intervals for `week 4` and `week 25`. 
+
+```{r compare week 4 and 25 confidence intervals for approval rate}
+net_approval_4_25 <- net_approval %>% 
+  filter(week %in% c(4, 25)) %>% 
   mutate(
     ci_width = upper_ci - lower_ci) %>% 
   select(week, lower_ci, upper_ci, ci_width)
 
-net_approval_5_25 %>% 
-  knitr::kable(bootstrap_options = c ("striped","hover","condensed","responsive")) %>%
-  kableExtra::kable_styling()
+net_approval_4_25
   
 ```
+> Can you explain what's going on? One paragraph would be enough.
 
-## Analysis of the difference
-
-From the results, we can clearly see that the confidence interval for Biden's net approval rate has been narrower from week 5 to week 25. \n
-
-The standard deviation in approval ratings is much larger in week 5 than in week 25, which generates a higher standard error and consequently a wider confidence interval. We assume this is because as after Biden has been elected for a longer period of time in week 25 (almost half a year), voters would become more clear about their approval or disapproval to the president. After Americans took over 25-week time to evaluate their newly elected president, they would probably have a clearer attitude towards Biden's policy changes, administration and national strategies. These clearer perceptions then result in this decreasing variance in approval ratings, consequently a lower standard deviation and ultimately more narrow confidence intervals.
+From the results, we can clearly see that the confidence interval for Biden's net approval rate has been narrower from week 4 to week 25. The standard deviation in approval ratings is much larger in week 4 than in week 25, which generates a higher standard error and consequently a wider confidence interval. We assume this is because as after Biden has been elected for a longer period of time in week 25 (almost half a year), voters would become more clear about their approval or disapproval to the president. After Americans took over 25-week time to evaluate their newly elected president, they would probably have a clearer attitude towards Biden's policy changes, administration and national strategies. These clearer perceptions then result in this decreasing variance in approval ratings, consequently a lower standard deviation and ultimately more narrow confidence intervals.
