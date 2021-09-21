@@ -3,7 +3,7 @@ authors:
 - Hugo Authors
 date: "`r Sys.Date()`"
 excerpt: A plot showing the weekly approval rate for president Biden
-hero: /images/pic06.jpg
+hero: /images/pic03.jpg
 title: "Biden's Approval Margins"
 ---
 
@@ -12,7 +12,7 @@ knitr::opts_chunk$set(
   message = FALSE, 
   warning = FALSE, 
   tidy = FALSE,
-  size = "small")
+  size = "large")
 
 options(digits = 3)
 
@@ -80,7 +80,7 @@ net_approval <- approval_polllist %>%
 #Report the weekly net approval rate for Biden
 net_approval %>% 
   knitr::kable(bootstrap_options = c ("striped","hover","condensed","responsive")) %>%
-  kableExtra::kable_styling()
+  kableExtra::kable_styling(font_size = 1)
 ```
 
 ### Plot the net approval rate
