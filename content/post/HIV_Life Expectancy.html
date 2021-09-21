@@ -7,9 +7,9 @@ hero: /images/pic04.jpg
 title: "HIV Prevalence and Life Expectancy"
 ---
 
-<script src="Challenge 2_files/header-attrs/header-attrs.js"></script>
-<script src="Challenge 2_files/kePrint/kePrint.js"></script>
-<link href="Challenge 2_files/lightable/lightable.css" rel="stylesheet" />
+<script src="HIV_Life Expectancy_files/header-attrs/header-attrs.js"></script>
+<script src="HIV_Life Expectancy_files/kePrint/kePrint.js"></script>
+<link href="HIV_Life Expectancy_files/lightable/lightable.css" rel="stylesheet" />
 
 
 <div id="gapminder-revisited" class="section level1">
@@ -94,7 +94,7 @@ ggplot(HIV_Life,
   facet_wrap(vars(region), scales=&quot;free&quot;)+
   #to remove the skewness on a-axis
   scale_x_log10() </code></pre>
-<p><img src="/post/Challenge%202_files/figure-html/relationship%20between%20HIV%20prevalence%20and%20life%20expectancy-1.png" width="960" style="display: block; margin: auto;" />
+<p><img src="/post/HIV_Life%20Expectancy_files/figure-html/relationship%20between%20HIV%20prevalence%20and%20life%20expectancy-1.png" width="960" style="display: block; margin: auto;" />
 Generally, there is a negative relationship between HIV prevalence and Life Expectancy. When there are more people between 15 and 49 getting HIV, the life expectancy of that country would decrease. Such trend is most evident in regions like Latin America, Sub-Saharan Africa and Middle East &amp; North Africa.<br />
 However, for Europe and Central Asia, the trend has been positive. It does not suggest that more HIV cases would boost life expectancy. It might be attributed to the local healthcare improvement and higher budget for healthcare.</p>
 <ol start="2" style="list-style-type: decimal">
@@ -120,7 +120,7 @@ ggplot(Fert_GDP,
   facet_wrap(vars(region), scales=&quot;free&quot;)+
   #to remove the skewness on a-axis
   scale_x_log10() </code></pre>
-<p><img src="/post/Challenge%202_files/figure-html/relationship%20between%20GDP%20per%20capita%20and%20female%20fertility-1.png" width="960" style="display: block; margin: auto;" />
+<p><img src="/post/HIV_Life%20Expectancy_files/figure-html/relationship%20between%20GDP%20per%20capita%20and%20female%20fertility-1.png" width="960" style="display: block; margin: auto;" />
 Generally, the relationship between GDP per capita and Female fertility is negative. This trend is evident in most regions but North America. There are many explanations:</p>
 <ul>
 <li>Firstly, the relative value of time to females in countries with different GDP per capita are extremely different. Higher GDP per capita would motivate females to work instead of staying at home and raising kids.<br />
@@ -146,7 +146,7 @@ ggplot(Missing_HIV,
     title = &quot;Missing observations of HIV data in each Continent&quot;,
     x= &quot;Region&quot;,
     y = &quot;Count of missing HIV data&quot;)</code></pre>
-<p><img src="/post/Challenge%202_files/figure-html/most%20observations%20with%20missing%20HIV%20data-1.png" width="648" style="display: block; margin: auto;" />
+<p><img src="/post/HIV_Life%20Expectancy_files/figure-html/most%20observations%20with%20missing%20HIV%20data-1.png" width="648" style="display: block; margin: auto;" />
 The Sub-Saharan Africa region has the most missing HIV data in the dataframe. The plot above shows the descending order of missing HIV data of each region.</p>
 <ol start="4" style="list-style-type: decimal">
 <li>How has mortality rate for under 5 changed by region? In each region, find the top 5 countries that have seen the greatest improvement, as well as those 5 countries where mortality rates have had the least improvement or even deterioration.</li>
@@ -180,7 +180,7 @@ ggplot(Mortality_plot,
         legend.text = element_text(size=10),
         legend.title = element_text(size=12)
         )</code></pre>
-<p><img src="/post/Challenge%202_files/figure-html/regional%20difference%20in%20mortality%20rate%20for%20under%205-1.png" width="960" style="display: block; margin: auto;" />
+<p><img src="/post/HIV_Life%20Expectancy_files/figure-html/regional%20difference%20in%20mortality%20rate%20for%20under%205-1.png" width="960" style="display: block; margin: auto;" />
 For Mortality rate for under 5 of different regions, there are huge differences in their changes over time.</p>
 <ul>
 <li>For North America, such rate has been remaining in very low level since 1979.</li>
@@ -989,7 +989,7 @@ ggplot(Fert_PrimEnrol,
         axis.text.y = element_text(size=14),
         strip.text = element_text(size=12),
         )</code></pre>
-<p><img src="/post/Challenge%202_files/figure-html/relationship%20between%20primary%20school%20enrollment%20and%20female%20fertility-1.png" width="960" style="display: block; margin: auto;" />
+<p><img src="/post/HIV_Life%20Expectancy_files/figure-html/relationship%20between%20primary%20school%20enrollment%20and%20female%20fertility-1.png" width="960" style="display: block; margin: auto;" />
 Generally, there is a negative relationship between primary school enrollment and female fertility. However, it is also worth noting that such relationship is less significant in Europe &amp; Central Asia. There are a huge cluster of observations on the right of the distribution and the best fitting line is actually positive sloping. Here are some possible explanations for the negative trend in regions such as Sub-Saharan Africa and Middle East:</p>
 <ul>
 <li>Firstly, primary school enrollment could be used as a proxy for national development, wealthiness and cultural value in education. In countries with higher primary school enrollment, it can be expected that females could spend more time pursuing personal goals and spend less time having kids.</li>
