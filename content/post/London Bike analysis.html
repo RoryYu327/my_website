@@ -3,7 +3,7 @@ authors:
 - Hugo Authors
 date: "2021-09-21"
 excerpt: London bike sharing changes from 2019 to 2021 and visualisation
-hero: /images/pic09.jpg
+hero: /images/pic07.jpg
 title: "Tfl London Bike"
 ---
 
@@ -17,12 +17,12 @@ title: "Tfl London Bike"
 
 # Download TFL data to temporary file
 httr::GET(url, write_disk(bike.temp &lt;- tempfile(fileext = &quot;.xlsx&quot;)))</code></pre>
-<pre><code>## Response [https://airdrive-secure.s3-eu-west-1.amazonaws.com/london/dataset/number-bicycle-hires/2021-08-23T14%3A32%3A29/tfl-daily-cycle-hires.xlsx?X-Amz-Algorithm=AWS4-HMAC-SHA256&amp;X-Amz-Credential=AKIAJJDIMAIVZJDICKHA%2F20210921%2Feu-west-1%2Fs3%2Faws4_request&amp;X-Amz-Date=20210921T214236Z&amp;X-Amz-Expires=300&amp;X-Amz-Signature=c5af0648485d38518c1fc56d220b7d89ac12051a3c71a81f40147d8d14d65c00&amp;X-Amz-SignedHeaders=host]
-##   Date: 2021-09-21 21:45
+<pre><code>## Response [https://airdrive-secure.s3-eu-west-1.amazonaws.com/london/dataset/number-bicycle-hires/2021-08-23T14%3A32%3A29/tfl-daily-cycle-hires.xlsx?X-Amz-Algorithm=AWS4-HMAC-SHA256&amp;X-Amz-Credential=AKIAJJDIMAIVZJDICKHA%2F20210921%2Feu-west-1%2Fs3%2Faws4_request&amp;X-Amz-Date=20210921T215450Z&amp;X-Amz-Expires=300&amp;X-Amz-Signature=2b80ee4a8da66b10fc5b27a58ad33b801790273e5113d0f1b19c6028ceb45b4e&amp;X-Amz-SignedHeaders=host]
+##   Date: 2021-09-21 21:54
 ##   Status: 200
 ##   Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
 ##   Size: 173 kB
-## &lt;ON DISK&gt;  C:\Users\RoryYu\AppData\Local\Temp\Rtmpi4MEpe\file32f039514a4d.xlsx</code></pre>
+## &lt;ON DISK&gt;  C:\Users\RoryYu\AppData\Local\Temp\RtmpMVjOmg\file57ac67d641ec.xlsx</code></pre>
 <pre class="r"><code># Use read_excel to read it as dataframe
 bike0 &lt;- read_excel(bike.temp,
                    sheet = &quot;Data&quot;,
