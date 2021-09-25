@@ -1,7 +1,7 @@
 ---
 hero:
   heading: Rory's Website
-  maxWidthPX: 500
+  maxWidthPX: 1500
 seo:
-  image: /images/banner.jpg
+  image: /images/profile.jpg
 ---
